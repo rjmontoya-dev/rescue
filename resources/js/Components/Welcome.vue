@@ -2,7 +2,7 @@
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import {computed, onMounted,ref} from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
-import { ref as dbRef, onChildAdded } from 'firebase/database';
+import { ref as dbRef, onChildChanged,onChildAdded } from 'firebase/database';
 import db from '@/firebase';
 
 const weather_data =  ref([]);
@@ -51,7 +51,9 @@ const getCurrentPositionAsync = () => {
 
 
 
+
 onMounted(async () => {
+
   try {
     const positionData = await getCurrentPositionAsync();
     weather_data.value = [
@@ -84,6 +86,7 @@ onMounted(async () => {
         data(){
             return {
                 chartOptions: {
+
                     chart: {
                         id: 'vuechart-example',
                     },
@@ -113,7 +116,7 @@ onMounted(async () => {
                             text: 'Time',
                         },
                         type:'date',
-                        categories:[],
+                        categories: ref([]),
                     } ,
                     yaxis: {
                         title: {
@@ -136,23 +139,28 @@ onMounted(async () => {
                 const stationDataRef = dbRef(db, 'water-level/readings/');
                 const snapshotValue = ref([]);
                 const reading = ref([]);
+                const xTime = ref([]);
                 onChildAdded(stationDataRef, (snapshot) => {
                     snapshotValue.value = snapshot.val();
                     reading.value.push(snapshotValue.value['val']);
-                    this.updateChart(reading.value.slice());
+                    xTime.value.push(new Date().toLocaleTimeString());
+                    this.updateChart(reading.value.slice(),xTime.value);
                     if(reading.value.length >= 10){
-                    reading.value.shift();
-
-                }
+                        reading.value.shift();
+                        xTime.value.shift();
+                    }
                 });
 
             },
-            updateChart(data){
-                this.series[0].data = [...data];
+            updateChart(ySeries = [],xSeries = []){
+                this.series[0].data = [...ySeries];
+                this.chartOptions.xaxis.categories = xSeries ;
+
             },
         },
         mounted(){
-              this.getWaterLevel();
+            this.updateChart();
+            this.getWaterLevel();
         }
     }
 </script>

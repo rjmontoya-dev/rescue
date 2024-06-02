@@ -12,6 +12,7 @@ import { ref as dbRef, onChildAdded,onChildChanged } from 'firebase/database';
 import db from '@/firebase';
 import {ElMessage} from 'element-plus'
 import axios from 'axios';
+import ResetPassword from '@/Pages/Auth/ResetPassword.vue';
 defineProps({
     title: String,
 });
@@ -44,68 +45,49 @@ const closeModal = ()=>{
     _showModal.value = false;
     window.speechSynthesis.cancel();
 }
-const getFireData = () =>{
+
+const getFireData =  () =>{
     const stationDataRef = dbRef(db, 'status-level');
 
-    onChildChanged(stationDataRef, (snapshot) => {
+    onChildChanged(stationDataRef,async (snapshot) => {
         const status = snapshot.val(); // This assumes 'status' is directly under 'water-level'
+        console.log(status);
+        return;
+        // if(status === "1"){
+        //     message.value = message_type.value[0].body;
+        // }
+        // if(status === "2"){
+        //     message.value = message_type.value[1].body;
+        //    await notify('2');
+        //    await sendEmail(message);
+        //    return
+        // }
+        // if(status === "3"){
+        //     message.value = message_type.value[2].body;
+        //    await notify('3');
+        //    await sendEmail(message);
+        //    return
+        // }
 
-        if(status === "1"){
-            message.value = message_type.value[0].body;
-        }
-        if(status === "2"){
-            message.value = message_type.value[1].body;
-            notify('2');
-            // sendSMS(message);
-            // speak(message_type.value[1].body);
-            sendEmail(message);
-            return;
-        }
-        if(status === "3"){
-            message.value = message_type.value[2].body;
-            notify('3');
-            // sendSMS(message);
-            // speak(message_type.value[2].body);
-            sendEmail(message);
-            return;
-        }
     });
-}
+};
 const speak = (message) => {
-
     const speech = new SpeechSynthesisUtterance();
     _showModal.value = true;
     speech.text = message;
     window.speechSynthesis.speak(speech);
 };
-const sendEmail =(message) =>{
-    axios.get('/api/email-notif',{params: {message: message.value}})
+const sendEmail = async(message) =>{
+    await axios.get('/api/email-notif',{params: {message: message.value}})
             .then((res)=>{
                 sysNotif('Email Successfully Sent.','success')
+                return
             })
             .catch((err)=>{console.log(err);
                 sysNotif('Oops, something went wrong','error');
             });
 }
-// const sendSMS =(message)=>{
-//     parameters.message = message.value;
-//     sysNotif("Message has successfully send.",'success')
-//     fetch('',{
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/x-www-form-urlencoded'
-//         },
-//         body: new URLSearchParams(parameters)
-//     }).then((res)=>{
-//         sendEmail(message)
 
-//     })
-//     .catch((err)=>{
-//         sendEmail(message);
-//         sysNotif('Oops, something went wrong','error')
-//     })
-
-// }
 const sysNotif =(message,type)=>{
     ElMessage({
             title: 'Success',
@@ -113,25 +95,32 @@ const sysNotif =(message,type)=>{
             type: type,
     })
 }
-const notify = (id)=>{
-    axios.post('admin/notify-message/'+ id)
-    .then((res)=>{console.log(res)})
-    .catch((err)=>{console.log(res)})
+const notify = async (id)=>{
+   var response = await axios.post('admin/notify-message/'+ id)
+    if(response.status){
+        sysNotif("Message Successfully sent!.",'success');
+        return;
+    }
+    return;
 }
-onMounted(() => {
-    getFireData();
-    axios.get('/message_info')
+const getDetails = async () =>{
+   await axios.get('/message_info')
     .then((res)=>{
         const contacts = res.data.contacts;
         parameters.number.push(...contacts.map(contact => '0'+contact.phone_number));
         message_type.value = res.data.messagecontent;
+        return
     })
     .catch((error) => {console.log(error)})
+}
+onMounted(() => {
+    getDetails();
+    getFireData();
 });
 
-onBeforeUnmount(() => {
-  window.speechSynthesis.cancel(); // Stop speech synthesis when the component is about to be destroyed
-});
+// onBeforeUnmount(() => {
+//   window.speechSynthesis.cancel(); // Stop speech synthesis when the component is about to be destroyed
+// });
 </script>
 
 <template>

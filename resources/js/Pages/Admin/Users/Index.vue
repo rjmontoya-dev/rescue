@@ -26,6 +26,7 @@ const form = useForm({
     id:null,
     name: '',
     email: '',
+    phone_number: '',
     password: '',
     password_confirmation: '',
     terms: false,
@@ -103,6 +104,20 @@ const destroyData=(id)=>{
                                             autocomplete="username"
                                         />
                                         <InputError class="mt-2" :message="form.errors.email" />
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <InputLabel for="phone_number" value="Mobile Number" />
+                                        <TextInput
+                                            id="phone_number"
+                                            v-model="form.phone_number"
+                                            type="number"
+                                            class="mt-1 block w-full"
+                                            required
+                                            autofocus
+                                            autocomplete="phone_number"
+                                        />
+                                        <InputError class="mt-2" :message="form.errors.phone_number" />
                                     </div>
 
                                     <div class="mt-4">
