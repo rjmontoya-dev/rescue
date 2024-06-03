@@ -51,23 +51,21 @@ const getFireData =  () =>{
 
     onChildChanged(stationDataRef,async (snapshot) => {
         const status = snapshot.val(); // This assumes 'status' is directly under 'water-level'
-        console.log(status);
-        return;
-        // if(status === "1"){
-        //     message.value = message_type.value[0].body;
-        // }
-        // if(status === "2"){
-        //     message.value = message_type.value[1].body;
-        //    await notify('2');
-        //    await sendEmail(message);
-        //    return
-        // }
-        // if(status === "3"){
-        //     message.value = message_type.value[2].body;
-        //    await notify('3');
-        //    await sendEmail(message);
-        //    return
-        // }
+        if(status === "1"){
+            message.value = message_type.value[0].body;
+        }
+        if(status === "2"){
+            message.value = message_type.value[1].body;
+           await notify('2');
+           await sendEmail(message);
+           return
+        }
+        if(status === "3"){
+            message.value = message_type.value[2].body;
+           await notify('3');
+           await sendEmail(message);
+           return
+        }
 
     });
 };
